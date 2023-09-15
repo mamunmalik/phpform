@@ -1,0 +1,46 @@
+version: '3.8'
+services:
+  php-apache:
+    #image: php:8.1-apache
+    container_name: php-apache-container
+    ports:
+      - "80:80"
+    volumes:
+      - ".:/var/www/html"
+      - "./.htaccess:/var/www/html/.htaccess"
+      - "./custom-apache-configs:/etc/apache2/conf-available"
+    build: .
+    networks:
+      - app-network
+    depends_on:
+      - mysql
+      - phpmyadmin
+  mysql:
+    image: 'mysql/mysql-server:8.0'
+    ports:
+        - '3306:3306'
+    environment:
+        MYSQL_ROOT_PASSWORD: 'password'
+        MYSQL_DATABASE: 'phpform_db'
+        MYSQL_USER: 'phpform_user'
+        MYSQL_PASSWORD: 'password'
+        MYSQL_ALLOW_EMPTY_PASSWORD: 1
+    volumes:
+      - ./mysql-data:/var/lib/mysql
+    networks:
+      - app-network
+  phpmyadmin:
+    depends_on:
+        - mysql
+    image: 'phpmyadmin:latest'
+    ports:
+        - 8080:80
+    networks:
+        - app-network
+    environment:
+        - PMA_ARBITRARY=1
+        - PMA_HOST=mysql
+        - PMA_PORT=3306
+networks:
+  app-network:
+    driver: bridge
